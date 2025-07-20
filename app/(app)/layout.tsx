@@ -15,7 +15,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 const sidebarItems = [
-  { href: "/home", icon: LayoutDashboardIcon, label: "Home" },
+  { href: "/admin", icon: LayoutDashboardIcon, label: "Home" },
   { href: "/file-upload", icon: UploadIcon, label: "File Upload" },
 ];
 

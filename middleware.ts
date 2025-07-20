@@ -1,13 +1,27 @@
+import { withAuth } from "next-auth/middleware"
 
-import { NextResponse } from "next/server";
-
-
-// Middleware removido: não há autenticação global. Apenas permite todas as rotas normalmente.
-
-export function middleware() {
-  return NextResponse.next();
-}
+export default withAuth(
+  function middleware(req) {
+    // Middleware adicional se necessário
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        // Proteger rotas /admin
+        if (req.nextUrl.pathname.startsWith('/admin')) {
+          return !!token
+        }
+        return true
+      },
+    },
+  }
+)
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
-};
+  matcher: [
+    "/((?!.*\\..*|_next).*)", 
+    "/", 
+    "/(api|trpc)(.*)",
+    "/admin/:path*" // Proteger todas as rotas admin
+  ],
+}

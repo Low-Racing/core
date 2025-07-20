@@ -1,11 +1,11 @@
-import React from "react";
-import { Card, CardHeader, CardBody, CardFooter } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { Copy, Download } from "lucide-react";
+import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { filesize } from "filesize";
-import { toast } from 'react-toastify';
+import { Copy, Download } from "lucide-react";
+import React from "react";
+import { toast } from "react-toastify";
 
 dayjs.extend(relativeTime);
 
@@ -28,7 +28,8 @@ interface Props {
 }
 
 const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
-  const { id, title, url, type, format, createdAt, bytes, icon, description } = file;
+  const { id, title, url, type, format, createdAt, bytes, icon, description } =
+    file;
 
   const handleDownload = () => window.open(url, "_blank");
 
@@ -46,10 +47,22 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
     const proxyUrl = `/api/file/view/${id}`;
 
     if (type.startsWith("image")) {
-      return <img src={proxyUrl} alt={title} className="w-full h-40 object-cover rounded-t-lg bg-gray-200" />;
+      return (
+        <img
+          src={proxyUrl}
+          alt={title}
+          className="w-full h-40 object-cover rounded-t-lg bg-gray-200"
+        />
+      );
     }
     if (type.startsWith("video")) {
-      return <video src={proxyUrl} controls className="w-full h-40 object-cover rounded-t-lg bg-gray-200" />;
+      return (
+        <video
+          src={proxyUrl}
+          controls
+          className="w-full h-40 object-cover rounded-t-lg bg-gray-200"
+        />
+      );
     }
     return (
       <div className="w-full h-40 flex flex-col items-center justify-center bg-gray-100 rounded-t-lg">
@@ -66,8 +79,15 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
     <Card shadow="sm" className="overflow-hidden">
       <CardHeader className="p-0">{renderPreview()}</CardHeader>
       <CardBody>
-        <h3 className="text-lg font-semibold mb-2 truncate" title={title}>{title}</h3>
-        <p className="text-sm text-gray-500 mb-2 truncate h-5" title={description || ''}>{description || 'Sem descrição'}</p>
+        <h3 className="text-lg font-semibold mb-2 truncate" title={title}>
+          {title}
+        </h3>
+        <p
+          className="text-sm text-gray-500 mb-2 truncate h-5"
+          title={description || ""}
+        >
+          {description || "Sem descrição"}
+        </p>
         <div className="flex flex-col gap-1 text-xs text-gray-600 mt-2">
           <div className="flex items-center justify-between">
             {bytes != null && <span>{filesize(bytes)}</span>}
@@ -81,8 +101,22 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         </div>
       </CardBody>
       <CardFooter className="flex gap-2">
-        <Button className="flex-1" onClick={handleCopy}><Copy className="w-4 h-4 mr-1" /> Copiar URL</Button>
-        <Button className="flex-1" onClick={handleDownload}><Download className="w-4 h-4 mr-1" /> Baixar</Button>
+        <Button
+          variant="bordered"
+          color="success"
+          className="flex-1"
+          onClick={handleCopy}
+        >
+          <Copy className="w-4 h-4 mr-1" /> Copiar URL
+        </Button>
+        <Button
+          variant="bordered"
+          color="success"
+          className="flex-1"
+          onClick={handleDownload}
+        >
+          <Download className="w-4 h-4 mr-1" /> Baixar
+        </Button>
       </CardFooter>
     </Card>
   );
