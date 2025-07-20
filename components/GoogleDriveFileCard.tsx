@@ -144,14 +144,17 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
     }
 
     if (e && 'key' in e && e.key === 'Escape') {
-      setEditedTitle(title);
+      setEditedTitle(title || '');
       setIsEditingTitle(false);
       return;
     }
 
-    const trimmedTitle = editedTitle.trim();
-    if (!trimmedTitle || trimmedTitle === title || isLoading) {
-      setEditedTitle(title);
+    // Verifica se editedTitle é uma string antes de chamar trim
+    const trimmedTitle = typeof editedTitle === 'string' ? editedTitle.trim() : '';
+    const currentTitle = title || '';
+    
+    if (!trimmedTitle || trimmedTitle === currentTitle || isLoading) {
+      setEditedTitle(currentTitle);
       setIsEditingTitle(false);
       return;
     }
@@ -170,7 +173,9 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         }
         
         // Atualiza o título localmente
-        file.title = trimmedTitle;
+        if (file) {
+          file.title = trimmedTitle;
+        }
         toast.success('Arquivo renomeado com sucesso!');
       } catch (error) {
         console.error('Erro ao renomear arquivo:', error);
