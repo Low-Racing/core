@@ -166,8 +166,6 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
     }
   };
 
-  // Apagar arquivo
-
   // Renomear arquivo
   const handleRenameTitle = async (e?: React.FocusEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
     // Se for um evento de teclado e não for Enter ou Escape, não faz nada
@@ -233,11 +231,6 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
 
   // Apagar arquivo
   const handleDeleteFile = async () => {
-    if (!id) {
-      toast.error('ID do arquivo não encontrado');
-      return;
-    }
-    
     setIsDeleteModalOpen(false);
     
     await withLoading(async () => {
