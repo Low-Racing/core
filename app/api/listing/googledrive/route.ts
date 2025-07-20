@@ -95,13 +95,12 @@ export async function GET(req: Request) {
       }
       
       if (!description) {
-        // Fallback para descrição baseada no tipo de arquivo
         if (item.mimeType.startsWith('image')) {
           description = 'Arquivo de imagem';
         } else if (item.mimeType.startsWith('video')) {
           description = 'Arquivo de vídeo';
         } else if (item.mimeType === 'application/json') {
-          description = 'Arquivo JSON - Clique em "Editar JSON" para modificar';
+          description = 'Arquivo JSON';
         } else if (item.mimeType === 'application/pdf') {
           description = 'Documento PDF';
         } else if (item.mimeType.includes('text')) {
@@ -114,12 +113,6 @@ export async function GET(req: Request) {
           description = 'Apresentação';
         } else {
           description = `Arquivo ${item.mimeType.split('/')[1]?.toUpperCase() || 'desconhecido'}`;
-        }
-        
-        // Adicionar informação de tamanho se disponível
-        if (item.size) {
-          const sizeInMB = (Number(item.size) / (1024 * 1024)).toFixed(1);
-          description += ` • ${sizeInMB} MB`;
         }
       }
       
