@@ -88,7 +88,11 @@ export async function GET(req: Request) {
       const localData = metadataMap.get(item.id);
       
       // Gerar descrição mais informativa
-      let description = localData?.description || item.description;
+      // Prioriza a descrição do banco (Prisma) se existir
+      let description = localData?.description ?? '';
+      if (!description) {
+        description = item.description;
+      }
       
       if (!description) {
         // Fallback para descrição baseada no tipo de arquivo
