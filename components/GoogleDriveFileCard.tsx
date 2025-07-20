@@ -30,10 +30,59 @@ interface Props {
   file: GoogleDriveFile;
 }
 
+const DeleteConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm,
+  fileName 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onConfirm: () => void;
+  fileName: string;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Confirmar Exclusão</h3>
+          <p className="text-gray-500 mb-6">
+            Tem certeza que deseja excluir o arquivo <span className="font-medium">{fileName}</span>? Esta ação não pode ser desfeita.
+          </p>
+          <div className="flex justify-center gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            >
+              Sim, excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
   const { id, title, url, type, format, createdAt, bytes, icon, description, uploadedBy, userAvatar } = file;
 
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(title);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -89,53 +138,75 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
   };
 
   // Renomear arquivo
-  const handleRenameTitle = async () => {
-    if (!editedTitle || editedTitle === title || isLoading) {
-      setIsEditingTitle(false);
+  const handleRenameTitle = async (e?: React.FocusEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
+    if (e && 'key' in e && e.key !== 'Enter' && e.key !== 'Escape') {
+      return;
+    }
+
+    if (e && 'key' in e && e.key === 'Escape') {
       setEditedTitle(title);
+      setIsEditingTitle(false);
+      return;
+    }
+
+    if (!editedTitle || editedTitle.trim() === title || isLoading) {
+      setEditedTitle(title);
+      setIsEditingTitle(false);
       return;
     }
     
     await withLoading(async () => {
-      const res = await fetch(`/api/file/rename`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileId: id, newTitle: editedTitle })
-      });
-      
-      const data = await res.json();
-      if (res.ok) {
-        toast.success('Arquivo renomeado!');
+      try {
+        const res = await fetch(`/api/file/rename`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileId: id, newTitle: editedTitle.trim() })
+        });
+        
+        const data = await res.json();
+        if (res.ok) {
+          toast.success('Arquivo renomeado com sucesso!');
+          // Atualiza o título localmente
+          file.title = editedTitle.trim();
+          setIsEditingTitle(false);
+        } else {
+          throw new Error(data.error || 'Erro ao renomear o arquivo');
+        }
+      } catch (error) {
+        console.error('Erro ao renomear arquivo:', error);
+        toast.error('Erro ao renomear o arquivo');
+        setEditedTitle(title);
+      } finally {
         setIsEditingTitle(false);
-        // Ideal: disparar atualização global da listagem
-      } else {
-        throw new Error(data.error || 'Erro ao renomear');
       }
     });
-    
-    // Se houver erro, o withLoading já tratou
-    if (isLoading) {
-      setEditedTitle(title);
-      setIsEditingTitle(false);
-    }
   };
 
   // Apagar arquivo
   const handleDeleteFile = async () => {
-    if (!window.confirm('Tem certeza que deseja apagar este arquivo?')) return;
+    setIsDeleteModalOpen(false);
     
     await withLoading(async () => {
-      const res = await fetch(`/api/file/delete?fileId=${id}`, { 
-        method: 'DELETE' 
-      });
-      
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Erro ao apagar o arquivo');
+      try {
+        setIsDeleting(true);
+        const res = await fetch(`/api/file/delete?fileId=${id}`, { 
+          method: 'DELETE' 
+        });
+        
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Erro ao apagar o arquivo');
+        }
+        
+        toast.success('Arquivo apagado com sucesso!');
+        // Disparar atualização da lista de arquivos
+        window.dispatchEvent(new CustomEvent('fileDeleted', { detail: { fileId: id } }));
+      } catch (error) {
+        console.error('Erro ao apagar arquivo:', error);
+        toast.error('Erro ao apagar o arquivo');
+      } finally {
+        setIsDeleting(false);
       }
-      
-      toast.success('Arquivo apagado com sucesso!');
-      // Ideal: disparar atualização global da listagem
     });
   };
 
@@ -235,55 +306,61 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
               <div className="h-6 bg-gray-200 rounded w-3/4 mb-1 animate-pulse"></div>
             </div>
           ) : isEditingTitle ? (
-    <input
-      className="text-lg font-semibold truncate border-b border-gray-400 bg-transparent outline-none flex-1"
-      value={editedTitle}
-      onChange={e => setEditedTitle(e.target.value)}
-      onBlur={handleRenameTitle}
-      onKeyDown={e => { if (e.key === 'Enter') handleRenameTitle(); }}
-      autoFocus
-      maxLength={100}
-      title={editedTitle}
-    />
-  ) : (
-    <h3
-      id={`file-${id}-title`}
-      className="text-lg font-semibold truncate flex-1 cursor-pointer hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:rounded"
-      title={title}
-      onClick={() => setIsEditingTitle(true)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          setIsEditingTitle(true);
-        }
-      }}
-      tabIndex={0}
-      role="button"
-      aria-label={`Renomear arquivo: ${title}. Pressione Enter ou Espaço para editar.`}
-    >
-      {title}
-    </h3>
-  )}
-  {!isContentLoading && (
-    <button
-      className="ml-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded p-1"
-      title="Renomear arquivo"
-      aria-label={`Renomear arquivo: ${title}`}
-      onClick={() => setIsEditingTitle(true)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          setIsEditingTitle(true);
-        }
-      }}
-      style={{ display: isEditingTitle ? 'none' : 'block' }}
-      type="button"
-    >
-      <span className="sr-only">Renomear arquivo</span>
-      <Edit className="w-4 h-4" aria-hidden="true" />
-    </button>
-  )}
-</div>
+            <input
+              className="text-lg font-semibold truncate border-b border-gray-400 bg-transparent outline-none flex-1 w-full"
+              value={editedTitle}
+              onChange={e => setEditedTitle(e.target.value)}
+              onBlur={handleRenameTitle}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleRenameTitle(e);
+                if (e.key === 'Escape') {
+                  setEditedTitle(title);
+                  setIsEditingTitle(false);
+                }
+              }}
+              autoFocus
+              maxLength={100}
+              title={editedTitle}
+            />
+          ) : (
+            <h3
+              id={`file-${id}-title`}
+              className="text-lg font-semibold truncate flex-1 cursor-pointer hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:rounded"
+              title={title}
+              onClick={() => setIsEditingTitle(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsEditingTitle(true);
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Renomear arquivo: ${title}. Pressione Enter ou Espaço para editar.`}
+            >
+              {title}
+            </h3>
+          )}
+          {!isContentLoading && (
+            <button
+              className="ml-1 text-gray-400 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded p-1"
+              title="Renomear arquivo"
+              aria-label={`Renomear arquivo: ${title}`}
+              onClick={() => setIsEditingTitle(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsEditingTitle(true);
+                }
+              }}
+              style={{ display: isEditingTitle ? 'none' : 'block' }}
+              type="button"
+            >
+              <span className="sr-only">Renomear arquivo</span>
+              <Edit className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
         <div className="mb-2 min-h-[2.5rem] flex items-start">
           {isContentLoading ? (
             <div className="w-full space-y-1">
@@ -318,53 +395,53 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
             ) : (
               <div className="flex items-center gap-2 min-w-0">
                 {userAvatar ? (
-                <div className="relative">
-                  <img 
-                    src={userAvatar} 
-                    alt={uploadedBy} 
-                    className="w-5 h-5 rounded-full object-cover border border-gray-200" 
-                    onError={(e) => {
-                      // Fallback para ícone padrão se o avatar não carregar
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
-                    }}
-                  />
-                  <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></span>
-                </div>
-              ) : (
-                    <div className="relative">
-                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center border border-gray-200">
-                        <span className="text-xs font-medium text-blue-600">
-                          {uploadedBy?.charAt(0).toUpperCase() || '?'}
-                        </span>
-                      </div>
-                      <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></span>
+                  <div className="relative">
+                    <img 
+                      src={userAvatar} 
+                      alt={uploadedBy} 
+                      className="w-5 h-5 rounded-full object-cover border border-gray-200" 
+                      onError={(e) => {
+                        // Fallback para ícone padrão se o avatar não carregar
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
+                      }}
+                    />
+                    <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></span>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center border border-gray-200">
+                      <span className="text-xs font-medium text-blue-600">
+                        {uploadedBy?.charAt(0).toUpperCase() || '?'}
+                      </span>
                     </div>
-                  )}
-                  <span className="truncate font-medium text-gray-700" title={uploadedBy}>
-                    {uploadedBy || 'Usuário'}
+                    <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full border-2 border-white"></span>
+                  </div>
+                )}
+                <span className="truncate font-medium text-gray-700" title={uploadedBy}>
+                  {uploadedBy || 'Usuário'}
+                </span>
+              </div>
+            )}
+            {isContentLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-5 w-12 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {bytes != null && (
+                  <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                    {filesize(bytes)}
                   </span>
-                </div>
-              )}
-              {isContentLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-16 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-5 w-12 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {bytes != null && (
-                    <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
-                      {filesize(bytes)}
-                    </span>
-                  )}
-                  {format && (
-                    <span className="hidden xs:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                      {format.split('/').pop()?.toUpperCase() || format.toUpperCase()}
-                    </span>
-                  )}
-                </div>
-              )}
+                )}
+                {format && (
+                  <span className="hidden xs:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                    {format.split('/').pop()?.toUpperCase() || format.toUpperCase()}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           
           {/* Linha da data */}
@@ -431,20 +508,27 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         <Button
           variant="solid"
           className="w-full bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleDeleteFile}
+          onClick={() => setIsDeleteModalOpen(true)}
           disabled={isDeleting || isLoading}
         >
-          {isLoading ? (
+          {isDeleting ? (
             <span className="flex items-center">
               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Processando...
+              Apagando...
             </span>
-          ) : isDeleting ? 'Apagando...' : 'Apagar'}
+          ) : 'Apagar'}
         </Button>
       </CardFooter>
+      
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteFile}
+        fileName={title}
+      />
       
       <JsonEditorModal
         isOpen={isJsonModalOpen}
