@@ -47,6 +47,19 @@ function Admin() {
     if (session !== undefined) {
       fetchFiles();
     }
+
+    // Adiciona listeners para atualizar a lista quando um arquivo for renomeado ou excluído
+    const handleFileRenamed = () => fetchFiles();
+    const handleFileDeleted = () => fetchFiles();
+
+    window.addEventListener('fileRenamed', handleFileRenamed);
+    window.addEventListener('fileDeleted', handleFileDeleted);
+    
+    // Remove os listeners quando o componente for desmontado
+    return () => {
+      window.removeEventListener('fileRenamed', handleFileRenamed);
+      window.removeEventListener('fileDeleted', handleFileDeleted);
+    };
   }, [fetchFiles, session]);
 
   if (loading) {
