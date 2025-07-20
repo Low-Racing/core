@@ -8,8 +8,10 @@ import path from 'path';
 // Interface para os metadados locais
 interface FileMetadata {
   id: string;
-  title: string;
-  description: string;
+  title?: string;
+  description?: string;
+  uploadedBy?: string;
+  userAvatar?: string;
 }
 
 // Caminho para o arquivo de metadados
@@ -40,7 +42,7 @@ async function fetchAllGoogleDriveFiles(accessToken: string, folderId?: string) 
   }
 
   do {
-    let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,size,iconLink,thumbnailLink,webViewLink,webContentLink)`;
+    let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,size,iconLink,thumbnailLink,webViewLink,webContentLink,owners(emailAddress,displayName,photoLink),lastModifyingUser(emailAddress,displayName,photoLink)`;
     if (pageToken) url += `&pageToken=${pageToken}`;
     url += '&pageSize=100';
     const res = await fetch(url, {
@@ -82,9 +84,19 @@ export async function GET(req: Request) {
       readMetadata(),
     ]);
 
-    const metadataMap = new Map(localMetadata.map(item => [item.id, item]));
+    // Criar um mapa dos metadados locais, garantindo que todos os campos necessários existam
+    const metadataMap = new Map();
+    
+    for (const item of localMetadata) {
+      metadataMap.set(item.id, {
+        title: item.title,
+        description: item.description,
+        uploadedBy: item.uploadedBy,
+        userAvatar: item.userAvatar
+      });
+    }
 
-    const files = driveFiles.map((item: any) => {
+    const files = await Promise.all(driveFiles.map(async (item: any) => {
       const localData = metadataMap.get(item.id);
       
       // Gerar descrição mais informativa
@@ -116,6 +128,24 @@ export async function GET(req: Request) {
         }
       }
       
+      // Buscar informações do usuário que fez o upload
+      let uploadedBy = (session as any)?.user?.name || 'Usuário';
+      let userAvatar = (session as any)?.user?.image || '';
+      
+      try {
+        // Se tivermos o ID do usuário que fez o upload, podemos buscar detalhes adicionais
+        if (item.lastModifyingUser?.emailAddress) {
+          uploadedBy = item.lastModifyingUser.displayName || item.lastModifyingUser.emailAddress;
+          userAvatar = item.lastModifyingUser.photoLink || '';
+        } else if (item.owners?.[0]?.emailAddress) {
+          // Se não tiver lastModifyingUser, tenta pegar do owner
+          uploadedBy = item.owners[0].displayName || item.owners[0].emailAddress;
+          userAvatar = item.owners[0].photoLink || '';
+        }
+      } catch (error) {
+        console.error('Erro ao buscar informações do usuário:', error);
+      }
+      
       return {
         id: item.id,
         title: localData?.title || item.name,
@@ -128,12 +158,24 @@ export async function GET(req: Request) {
         icon: item.iconLink,
         thumbnail: item.thumbnailLink,
         webContentLink: item.webContentLink,
+        // Mantém os dados do usuário dos metadados locais se existirem, senão usa os do Google Drive
+        uploadedBy: localData?.uploadedBy || uploadedBy,
+        userAvatar: localData?.userAvatar || userAvatar,
       };
-    });
+    }));
 
     return NextResponse.json({ files });
   } catch (err: any) {
-    console.error('Erro ao listar arquivos:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error('Erro ao listar arquivos:', {
+      message: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+      name: err.name,
+      code: (err as any).code
+    });
+    
+    return NextResponse.json({ 
+      error: 'Erro ao listar arquivos',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    }, { status: 500 });
   }
 }

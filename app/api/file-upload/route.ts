@@ -17,7 +17,17 @@ async function uploadToGoogleDrive(accessToken: string, file: File, filename: st
   const closeDelimiter = `\r\n--${boundary}--`;
 
   const fileBuffer = Buffer.from(await file.arrayBuffer());
-  const contentType = file.type || 'application/octet-stream';
+  // Força o content-type para application/octet-stream para arquivos .lowup
+  const contentType = filename.endsWith('.lowup') 
+    ? 'application/octet-stream' 
+    : file.type || 'application/octet-stream';
+  
+  console.log('Enviando arquivo para o Google Drive:', {
+    filename,
+    contentType,
+    size: fileBuffer.length,
+    folderId
+  });
 
   const body =
     delimiter +
@@ -48,8 +58,13 @@ async function uploadToGoogleDrive(accessToken: string, file: File, filename: st
 }
 
 export async function POST(request: NextRequest) {
+  console.log('Iniciando upload de arquivo...');
   const session = await getServerSession(authOptions);
   const accessToken = (session as any)?.accessToken;
+  
+  if (!accessToken) {
+    console.error('Token de acesso não encontrado na sessão');
+  }
 
   if (!accessToken) {
     return NextResponse.json({ error: 'Usuário não autenticado ou token ausente.' }, { status: 401 });
