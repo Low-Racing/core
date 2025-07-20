@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { authOptions } from '@/lib/auth';
+
 const GOOGLE_DRIVE_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID || undefined;
 
 async function uploadToGoogleDrive(accessToken: string, file: File, filename: string, folderId?: string) {
@@ -17,7 +19,7 @@ async function uploadToGoogleDrive(accessToken: string, file: File, filename: st
   const fileBuffer = Buffer.from(await file.arrayBuffer());
   const contentType = file.type || 'application/octet-stream';
 
-  let body =
+  const body =
     delimiter +
     'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
     JSON.stringify(metadata) +

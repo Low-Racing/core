@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextAuthOptions } from "next-auth"
+// Remove this line: import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 
 export const authOptions: NextAuthOptions = {
@@ -69,3 +70,7 @@ export const authOptions: NextAuthOptions = {
     },
   },
 }
+
+// Remove these lines - they should only be in the route file:
+// const handler = NextAuth(authOptions)
+// export { handler as GET, handler as POST }

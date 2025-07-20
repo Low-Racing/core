@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from '@/lib/auth'
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -74,7 +75,7 @@ export async function GET(req: Request) {
 
   try {
     const { searchParams } = new URL(req.url);
-    let folderId = searchParams.get('folderId') || DEFAULT_FOLDER_ID || undefined;
+    const folderId = searchParams.get('folderId') || DEFAULT_FOLDER_ID || undefined;
 
     const [driveFiles, localMetadata] = await Promise.all([
       fetchAllGoogleDriveFiles(accessToken, folderId),
