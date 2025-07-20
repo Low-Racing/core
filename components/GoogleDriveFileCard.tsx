@@ -149,7 +149,8 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
       return;
     }
 
-    if (!editedTitle || editedTitle.trim() === title || isLoading) {
+    const trimmedTitle = editedTitle.trim();
+    if (!trimmedTitle || trimmedTitle === title || isLoading) {
       setEditedTitle(title);
       setIsEditingTitle(false);
       return;
@@ -160,21 +161,20 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         const res = await fetch(`/api/file/rename`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileId: id, newTitle: editedTitle.trim() })
+          body: JSON.stringify({ fileId: id, newTitle: trimmedTitle })
         });
         
         const data = await res.json();
-        if (res.ok) {
-          toast.success('Arquivo renomeado com sucesso!');
-          // Atualiza o título localmente
-          file.title = editedTitle.trim();
-          setIsEditingTitle(false);
-        } else {
+        if (!res.ok) {
           throw new Error(data.error || 'Erro ao renomear o arquivo');
         }
+        
+        // Atualiza o título localmente
+        file.title = trimmedTitle;
+        toast.success('Arquivo renomeado com sucesso!');
       } catch (error) {
         console.error('Erro ao renomear arquivo:', error);
-        toast.error('Erro ao renomear o arquivo');
+        toast.error(error instanceof Error ? error.message : 'Erro ao renomear o arquivo');
         setEditedTitle(title);
       } finally {
         setIsEditingTitle(false);
@@ -203,7 +203,7 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         window.dispatchEvent(new CustomEvent('fileDeleted', { detail: { fileId: id } }));
       } catch (error) {
         console.error('Erro ao apagar arquivo:', error);
-        toast.error('Erro ao apagar o arquivo');
+        toast.error(error instanceof Error ? error.message : 'Erro ao apagar o arquivo');
       } finally {
         setIsDeleting(false);
       }
