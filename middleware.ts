@@ -1,19 +1,25 @@
 import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
 export default withAuth(
   function middleware(req) {
-    // Middleware adicional se necessário
+    // Se chegou até aqui, o usuário está autenticado
+    return NextResponse.next()
   },
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        // Proteger rotas /admin
+        // Se está tentando acessar /admin e não tem token
         if (req.nextUrl.pathname.startsWith('/admin')) {
           return !!token
         }
+        // Para outras rotas, permite acesso
         return true
       },
     },
+    pages: {
+      signIn: '/login', // Usa sua página de login existente
+    }
   }
 )
 
@@ -22,6 +28,6 @@ export const config = {
     "/((?!.*\\..*|_next).*)", 
     "/", 
     "/(api|trpc)(.*)",
-    "/admin/:path*" // Proteger todas as rotas admin
+    "/admin/:path*" // Proteger todas as rotas que começam com /admin
   ],
 }
