@@ -33,46 +33,107 @@ async function readMetadata(): Promise<FileMetadata[]> {
 const DEFAULT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
 async function fetchAllGoogleDriveFiles(accessToken: string, folderId?: string) {
+  console.log('🔍 Iniciando busca de arquivos no Google Drive');
+  console.log('📁 Pasta ID:', folderId || 'Nenhuma (diretório raiz)');
+  
   let files: any[] = [];
   let pageToken = '';
   const base = 'https://www.googleapis.com/drive/v3/files';
   let query = "trashed=false";
+  
   if (folderId) {
     query += ` and '${folderId}' in parents`;
   }
-
+  
+  console.log('🔎 Query de busca:', query);
+  
+  let page = 1;
+  
   do {
+    console.log(`📄 Buscando página ${page} de resultados...`);
+    
     let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,size,iconLink,thumbnailLink,webViewLink,webContentLink,owners(emailAddress,displayName,photoLink),lastModifyingUser(emailAddress,displayName,photoLink)`;
     if (pageToken) url += `&pageToken=${pageToken}`;
     url += '&pageSize=100';
+    
+    console.log('🌐 Fazendo requisição para:', url);
+    
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { 
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
       cache: 'no-store',
     });
 
+    console.log(`📡 Resposta recebida - Status: ${res.status} ${res.statusText}`);
+    
     if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      throw new Error(errJson?.error?.message || `Erro ao buscar arquivos do Google Drive: ${res.statusText}`);
+      const errorText = await res.text();
+      console.error('❌ Erro na resposta da API do Google Drive:', {
+        status: res.status,
+        statusText: res.statusText,
+        headers: Object.fromEntries(res.headers.entries()),
+        body: errorText
+      });
+      
+      let errorMessage = `Erro ao buscar arquivos do Google Drive: ${res.status} ${res.statusText}`;
+      try {
+        const errJson = JSON.parse(errorText);
+        console.error('📌 Detalhes do erro:', errJson);
+        errorMessage = errJson?.error?.message || errorMessage;
+      } catch (e) {
+        console.error('❌ Não foi possível analisar a resposta de erro como JSON');
+      }
+      
+      throw new Error(errorMessage);
     }
 
-    const data = await res.json();
-    files = files.concat(data.files || []);
+    const data = await res.json().catch(e => {
+      console.error('❌ Erro ao analisar resposta JSON:', e);
+      throw new Error('Resposta inválida da API do Google Drive');
+    });
+    
+    console.log(`✅ Página ${page} - ${data.files?.length || 0} arquivos encontrados`);
+    
+    if (data.files && data.files.length > 0) {
+      files = files.concat(data.files);
+      console.log(`📊 Total acumulado: ${files.length} arquivos`);
+    }
+    
     pageToken = data.nextPageToken;
+    page++;
+    
   } while (pageToken);
-
+  
+  console.log(`✅ Busca concluída. Total de arquivos encontrados: ${files.length}`);
   return files;
 }
 
 export async function GET(req: Request) {
+  console.log('🔍 Iniciando requisição para listar arquivos do Google Drive');
+  
+  // Log dos headers recebidos
+  const headers = Object.fromEntries(req.headers.entries());
+  console.log('📋 Headers recebidos:', headers);
+  
   const session = await getServerSession(authOptions);
+  console.log('🔑 Sessão do servidor:', session ? 'Encontrada' : 'Não encontrada');
+  
   let accessToken = (session as any)?.accessToken as string | undefined;
+  console.log('🔑 Token de acesso da sessão:', accessToken ? 'Presente' : 'Ausente');
 
   if (!accessToken) {
     accessToken = req.headers.get("x-access-token") || undefined;
+    console.log('🔑 Token de acesso do header x-access-token:', accessToken ? 'Presente' : 'Ausente');
   }
 
   if (!accessToken) {
-    return NextResponse.json({ error: 'Usuário não autenticado ou token ausente.' }, { status: 401 });
+    console.error('❌ Erro: Nenhum token de acesso encontrado na sessão ou nos headers');
+    return NextResponse.json({ 
+      error: 'Usuário não autenticado ou token ausente.',
+      details: 'Nenhum token de acesso encontrado na sessão ou nos headers'
+    }, { status: 401 });
   }
 
   try {
