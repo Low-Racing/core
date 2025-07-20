@@ -4,7 +4,7 @@
 /node_modules
 /.pnp
 .pnp.*
-.yarn/*
+/yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
@@ -30,8 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# Environment files
 .env
+.env.local
+.env.development
+.env.test
+.env.production
 
 # vercel
 .vercel
@@ -40,3 +44,41 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Prisma
+/prisma/.env
+/prisma/migrations/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Local Netlify folder
+.netlify
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Serverless directories
+.serverless/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity

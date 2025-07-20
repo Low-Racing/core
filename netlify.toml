@@ -1,6 +1,25 @@
 [build]
-  command = "npm run build"
+  command = "npm install && npm run build"
   publish = ".next"
+  environment = { NODE_VERSION = "20", NPM_FLAGS = "--legacy-peer-deps" }
+
+[build.environment]
+  NODE_OPTIONS = "--max_old_space_size=4096"
+  NEXT_TELEMETRY_DISABLED = "1"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    buildCommand = "npm run build"
+    installCommand = "npm install"
+
+[dev]
+  command = "npm run dev"
+  port = 3000
+  publish = ".next"
+  targetPort = 3000
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

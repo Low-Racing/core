@@ -167,42 +167,6 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
   };
 
   // Apagar arquivo
-  const handleDeleteFile = async () => {
-    if (!id) {
-      toast.error('ID do arquivo não encontrado');
-      return;
-    }
-
-    try {
-      setIsDeleting(true);
-      const response = await fetch(`/api/file/delete`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fileId: id }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Falha ao excluir o arquivo');
-      }
-
-      toast.success('Arquivo excluído com sucesso!');
-      
-      // Dispara evento personalizado para notificar o componente pai
-      window.dispatchEvent(new CustomEvent('fileDeleted', { detail: { fileId: id } }));
-      
-      // Fecha o modal de confirmação
-      setIsDeleteModalOpen(false);
-    } catch (error) {
-      console.error('Erro ao excluir arquivo:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao excluir o arquivo');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   // Renomear arquivo
   const handleRenameTitle = async (e?: React.FocusEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
@@ -269,6 +233,11 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
 
   // Apagar arquivo
   const handleDeleteFile = async () => {
+    if (!id) {
+      toast.error('ID do arquivo não encontrado');
+      return;
+    }
+    
     setIsDeleteModalOpen(false);
     
     await withLoading(async () => {
