@@ -34,12 +34,18 @@ export async function POST(request: Request) {
     const jsonString = JSON.stringify(content, null, 2);
     const buffer = Buffer.from(jsonString, 'utf-8');
 
+    // Cria um stream a partir do buffer
+    const { Readable } = require('stream');
+    const stream = new Readable();
+    stream.push(buffer);
+    stream.push(null);
+
     // Atualiza o arquivo no Google Drive
     const response = await drive.files.update({
       fileId: fileId,
       media: {
         mimeType: 'application/json',
-        body: buffer,
+        body: stream,
       },
       requestBody: {
         name: fileName,

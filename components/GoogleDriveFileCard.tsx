@@ -52,7 +52,6 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
                      title.toLowerCase().endsWith('.json');
 
   const handleEditJson = () => {
-    console.log('Botão de editar JSON clicado!', { id, title, isJsonFile });
     setIsJsonModalOpen(true);
   };
 

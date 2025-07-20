@@ -22,8 +22,6 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  console.log('JsonEditorModal props:', { isOpen, fileId, fileName });
-
   useEffect(() => {
     if (isOpen && fileId) {
       loadJsonContent();
@@ -114,44 +112,44 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black bg-opacity-50" 
+        className="absolute inset-0 bg-black bg-opacity-70" 
         onClick={onClose}
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] flex flex-col">
+      <div className="relative bg-gray-900 rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] flex flex-col border border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Editando JSON</h2>
-            <p className="text-sm text-gray-500 mt-1">{fileName}</p>
+            <h2 className="text-xl font-semibold text-white">Editando JSON</h2>
+            <p className="text-sm text-gray-400 mt-1">{fileName}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-200 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
         </div>
         
         {/* Body */}
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-6 overflow-auto bg-gray-800">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-600">Carregando arquivo...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+              <span className="ml-2 text-gray-300">Carregando arquivo...</span>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-300">
                   Edite o conteúdo JSON abaixo:
                 </span>
                 <Button
                   size="sm"
                   variant="flat"
                   onClick={formatJson}
-                  className="text-xs"
+                  className="text-xs bg-gray-700 text-gray-200 hover:bg-gray-600"
                 >
                   Formatar JSON
                 </Button>
@@ -161,7 +159,7 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
                 value={jsonContent}
                 onChange={(e) => setJsonContent(e.target.value)}
                 rows={20}
-                className="w-full p-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 bg-gray-900 border border-gray-600 rounded-md font-mono text-sm text-gray-100 resize-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 placeholder-gray-500"
                 placeholder="Cole o conteúdo JSON aqui..."
               />
             </div>
@@ -169,23 +167,25 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
         </div>
         
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
+        <div className="flex justify-end gap-3 p-6 border-t border-gray-700 bg-gray-800">
           <Button 
             color="danger" 
             variant="light" 
             onClick={onClose}
             disabled={isSaving}
+            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
           >
             Cancelar
           </Button>
-          <Button 
-            color="primary" 
+          <button
             onClick={handleSave}
             disabled={isLoading || isSaving}
-            className={isSaving ? 'opacity-50 cursor-not-allowed' : ''}
+            className={`px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors ${
+              isLoading || isSaving ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
