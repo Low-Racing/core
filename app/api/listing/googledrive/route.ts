@@ -40,15 +40,11 @@ async function fetchAllGoogleDriveFiles(accessToken: string, folderId?: string) 
   }
 
   do {
-    // Incluindo lastModifyingUser nos campos solicitados
-    let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,modifiedTime,size,iconLink,thumbnailLink,webViewLink,webContentLink,lastModifyingUser(displayName,photoLink,emailAddress))`;
+    let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,size,iconLink,thumbnailLink,webViewLink,webContentLink,lastModifyingUser)`;
     if (pageToken) url += `&pageToken=${pageToken}`;
     url += '&pageSize=100';
     const res = await fetch(url, {
-      headers: { 
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json'
-      },
+      headers: { Authorization: `Bearer ${accessToken}` },
       cache: 'no-store',
     });
 
@@ -110,68 +106,57 @@ export async function GET(req: Request) {
     console.log(`✅ ${driveFiles.length} arquivos encontrados no Google Drive`);
     console.log(`📊 ${localMetadata.length} metadados locais encontrados`);
 
-    // Criar um mapa dos metadados locais, garantindo que todos os campos necessários existam
-    const metadataMap = new Map(localMetadata.map(item => [item.id, item]));
-
-    const files = driveFiles.map((item: any) => {
-      const localData = metadataMap.get(item.id);
+    // Mapear os arquivos para o formato esperado pelo frontend
+    const mappedFiles = driveFiles.map((file: any) => {
+      const localFile = localMetadata.find((f: any) => f.id === file.id);
       
-      // Gerar descrição mais informativa
-      // Prioriza a descrição do banco (Prisma) se existir
-      let description = localData?.description ?? '';
+      // Gerar descrição baseada no tipo de arquivo
+      let description = localFile?.description || '';
       if (!description) {
-        description = item.description;
-      }
-
-      if (!description) {
-        // Fallback para descrição baseada no tipo de arquivo
-        if (item.mimeType.startsWith('image')) {
-          description = 'Arquivo de imagem';
-        } else if (item.mimeType.startsWith('video')) {
-          description = 'Arquivo de vídeo';
-        } else if (item.mimeType === 'application/json') {
-          description = 'Arquivo JSON - Clique em "Editar JSON" para modificar';
-        } else if (item.mimeType === 'application/pdf') {
+        if (file.mimeType === 'application/json') {
+          description = 'Arquivo de configuração JSON';
+        } else if (file.mimeType.startsWith('image/')) {
+          description = `Imagem ${file.mimeType.split('/')[1].toUpperCase()}`;
+        } else if (file.mimeType.startsWith('video/')) {
+          description = `Vídeo ${file.mimeType.split('/')[1].toUpperCase()}`;
+        } else if (file.mimeType === 'application/pdf') {
           description = 'Documento PDF';
-        } else if (item.mimeType.includes('text')) {
-          description = 'Arquivo de texto';
-        } else if (item.mimeType.includes('spreadsheet') || item.mimeType.includes('excel')) {
+        } else if (file.mimeType.includes('spreadsheet')) {
           description = 'Planilha';
-        } else if (item.mimeType.includes('document') || item.mimeType.includes('word')) {
-          description = 'Documento';
-        } else if (item.mimeType.includes('presentation') || item.mimeType.includes('powerpoint')) {
+        } else if (file.mimeType.includes('document')) {
+          description = 'Documento de texto';
+        } else if (file.mimeType.includes('presentation')) {
           description = 'Apresentação';
         } else {
-          description = `Arquivo ${item.mimeType.split('/')[1]?.toUpperCase() || 'desconhecido'}`;
+          description = 'Arquivo';
         }
         
-        // Adicionar informação de tamanho se disponível
-        if (item.size) {
-          const sizeInMB = (Number(item.size) / (1024 * 1024)).toFixed(1);
+        // Adicionar informações de tamanho se disponível
+        if (file.size) {
+          const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
           description += ` • ${sizeInMB} MB`;
         }
       }
 
       return {
-        id: item.id,
-        title: localData?.title || item.name,
-        description: description,
-        url: item.webContentLink,
-        type: item.mimeType.startsWith('image') ? 'image' : item.mimeType.startsWith('video') ? 'video' : 'file',
-        format: item.mimeType,
-        createdAt: item.createdTime,
-        bytes: item.size ? Number(item.size) : undefined,
-        icon: item.iconLink,
-        thumbnail: item.thumbnailLink,
-        webContentLink: item.webContentLink,
-        lastModifiedBy: item.lastModifyingUser?.displayName,
-        lastModifiedByEmail: item.lastModifyingUser?.emailAddress,
-        lastModifiedByPhoto: item.lastModifyingUser?.photoLink,
+        id: file.id,
+        title: file.name,
+        description,
+        url: file.webContentLink || `https://drive.google.com/file/d/${file.id}/view`,
+        type: file.mimeType,
+        format: file.mimeType,
+        createdAt: file.createdTime,
+        bytes: parseInt(file.size || '0'),
+        icon: file.iconLink,
+        thumbnail: file.thumbnailLink,
+        webContentLink: file.webContentLink,
+        uploadedBy: file.lastModifyingUser?.displayName || 'Usuário',
+        userAvatar: file.lastModifyingUser?.photoLink?.replace(/=s\d+$/, '=s64') // Tamanho padrão para o avatar
       };
     });
 
-    console.log(`✅ ${files.length} arquivos processados com sucesso`);
-    return NextResponse.json({ files });
+    console.log(`✅ ${mappedFiles.length} arquivos processados com sucesso`);
+    return NextResponse.json({ files: mappedFiles });
   } catch (err: any) {
     console.error('❌ Erro ao listar arquivos:', {
       message: err.message,

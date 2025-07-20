@@ -5,17 +5,11 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { X } from "lucide-react";
 
-interface UserInfo {
-  name: string;
-  avatar?: string;
-}
-
 interface JsonEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
   fileId: string;
   fileName: string;
-  userInfo?: UserInfo;
 }
 
 const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
@@ -23,7 +17,6 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
   onClose,
   fileId,
   fileName,
-  userInfo = { name: 'Usuário' }
 }) => {
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -126,46 +119,16 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
       {/* Modal */}
       <div className="relative bg-gray-900 rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] flex flex-col border border-gray-700">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              {userInfo.avatar ? (
-                <img 
-                  src={userInfo.avatar} 
-                  alt={userInfo.name}
-                  className="w-8 h-8 rounded-full object-cover border border-gray-600"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = 'https://www.gstatic.com/mobilesdk/160503_mobilesdk/logo/2x/firebase_28dp.png';
-                  }}
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 flex items-center justify-center border border-gray-600">
-                  <span className="text-xs font-medium text-blue-600 dark:text-blue-300">
-                    {userInfo.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">Editando JSON</h2>
-              <div className="flex items-center gap-2">
-                <p className="text-sm text-gray-400 truncate max-w-xs" title={fileName}>
-                  {fileName}
-                </p>
-                <span className="text-xs text-gray-500">•</span>
-                <p className="text-xs text-gray-400">
-                  por {userInfo.name}
-                </p>
-              </div>
-            </div>
+        <div className="flex items-center justify-between p-6 border-b border-gray-700">
+          <div>
+            <h2 className="text-xl font-semibold text-white">Editando JSON</h2>
+            <p className="text-sm text-gray-400 mt-1">{fileName}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-200 transition-colors p-1"
-            aria-label="Fechar modal"
+            className="text-gray-400 hover:text-gray-200 transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
         
