@@ -40,11 +40,15 @@ async function fetchAllGoogleDriveFiles(accessToken: string, folderId?: string) 
   }
 
   do {
-    let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,size,iconLink,thumbnailLink,webViewLink,webContentLink)`;
+    // Incluindo lastModifyingUser nos campos solicitados
+    let url = `${base}?q=${encodeURIComponent(query)}&fields=nextPageToken,files(id,name,description,mimeType,createdTime,modifiedTime,size,iconLink,thumbnailLink,webViewLink,webContentLink,lastModifyingUser(displayName,photoLink,emailAddress))`;
     if (pageToken) url += `&pageToken=${pageToken}`;
     url += '&pageSize=100';
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${accessToken}` },
+      headers: { 
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json'
+      },
       cache: 'no-store',
     });
 
@@ -160,6 +164,9 @@ export async function GET(req: Request) {
         icon: item.iconLink,
         thumbnail: item.thumbnailLink,
         webContentLink: item.webContentLink,
+        lastModifiedBy: item.lastModifyingUser?.displayName,
+        lastModifiedByEmail: item.lastModifyingUser?.emailAddress,
+        lastModifiedByPhoto: item.lastModifyingUser?.photoLink,
       };
     });
 
