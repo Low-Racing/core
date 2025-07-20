@@ -450,6 +450,18 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
           )}
         </Button>
       </CardFooter>
+      
+      {/* Json Editor Modal */}
+      <JsonEditorModal
+        isOpen={isJsonModalOpen}
+        onClose={() => setIsJsonModalOpen(false)}
+        fileId={id}
+        fileName={title}
+        userInfo={{
+          name: uploadedBy || 'Usuário',
+          avatar: userAvatar
+        }}
+      />
     </Card>
   );
 };
