@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGoogleDriveClient } from "../../../lib/googleDrive";
+import { getGoogleDriveClient } from "@/lib/googleDrive";
 
 export async function DELETE(req: NextRequest) {
   try {
