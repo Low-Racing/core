@@ -3,9 +3,10 @@ import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { filesize } from "filesize";
-import { Copy, Download } from "lucide-react";
-import React from "react";
+import { Copy, Download, Edit } from "lucide-react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
+import JsonEditorModal from "./JsonEditorModal";
 
 dayjs.extend(relativeTime);
 
@@ -30,6 +31,8 @@ interface Props {
 const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
   const { id, title, url, type, format, createdAt, bytes, icon, description } =
     file;
+  
+  const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
 
   const handleDownload = () => window.open(url, "_blank");
 
@@ -41,6 +44,15 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
       console.error("Failed to copy: ", err);
       toast.error("Falha ao copiar a URL.");
     }
+  };
+
+  // Verifica se é um arquivo JSON
+  const isJsonFile = type === 'application/json' || 
+                     format === 'application/json' || 
+                     title.toLowerCase().endsWith('.json');
+
+  const handleEditJson = () => {
+    setIsJsonModalOpen(true);
   };
 
   const renderPreview = () => {
@@ -101,10 +113,20 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         </div>
       </CardBody>
       <CardFooter className="flex gap-2">
+        {isJsonFile && (
+          <Button
+            variant="bordered"
+            color="primary"
+            className="flex-1"
+            onClick={handleEditJson}
+          >
+            <Edit className="w-4 h-4 mr-1" /> Editar JSON
+          </Button>
+        )}
         <Button
           variant="bordered"
           color="success"
-          className="flex-1"
+          className={isJsonFile ? "flex-1" : "flex-1"}
           onClick={handleCopy}
         >
           <Copy className="w-4 h-4 mr-1" /> Copiar URL
@@ -112,12 +134,19 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         <Button
           variant="bordered"
           color="success"
-          className="flex-1"
+          className={isJsonFile ? "flex-1" : "flex-1"}
           onClick={handleDownload}
         >
           <Download className="w-4 h-4 mr-1" /> Baixar
         </Button>
       </CardFooter>
+      
+      <JsonEditorModal
+        isOpen={isJsonModalOpen}
+        onClose={() => setIsJsonModalOpen(false)}
+        fileId={id}
+        fileName={title}
+      />
     </Card>
   );
 };
