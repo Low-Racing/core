@@ -94,12 +94,20 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         <h3 className="text-lg font-semibold mb-2 truncate" title={title}>
           {title}
         </h3>
-        <p
-          className="text-sm text-gray-500 mb-2 truncate h-5"
-          title={description || ""}
-        >
-          {description || "Sem descrição"}
-        </p>
+        <div className="mb-2 min-h-[2.5rem] flex items-start">
+          <p
+            className="text-sm text-gray-500 leading-relaxed overflow-hidden"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical' as const,
+              wordBreak: 'break-word'
+            }}
+            title={description || "Sem descrição"}
+          >
+            {description || "Sem descrição"}
+          </p>
+        </div>
         <div className="flex flex-col gap-1 text-xs text-gray-600 mt-2">
           <div className="flex items-center justify-between">
             {bytes != null && <span>{filesize(bytes)}</span>}
@@ -116,8 +124,8 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         {isJsonFile && (
           <Button
             variant="bordered"
-            color="primary"
-            className="flex-1"
+            color="secondary"
+            className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50"
             onClick={handleEditJson}
           >
             <Edit className="w-4 h-4 mr-1" /> Editar JSON
@@ -125,8 +133,8 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         )}
         <Button
           variant="bordered"
-          color="success"
-          className={isJsonFile ? "flex-1" : "flex-1"}
+          color="primary"
+          className={`${isJsonFile ? "flex-1" : "flex-1"} border-blue-500 text-blue-600 hover:bg-blue-50`}
           onClick={handleCopy}
         >
           <Copy className="w-4 h-4 mr-1" /> Copiar URL
@@ -134,7 +142,7 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
         <Button
           variant="bordered"
           color="success"
-          className={isJsonFile ? "flex-1" : "flex-1"}
+          className={`${isJsonFile ? "flex-1" : "flex-1"} border-green-500 text-green-600 hover:bg-green-50`}
           onClick={handleDownload}
         >
           <Download className="w-4 h-4 mr-1" /> Baixar
