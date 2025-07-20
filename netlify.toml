@@ -1,13 +1,16 @@
 [build]
-  command = "npm install && npx prisma generate && npm run build"
+  command = "npm install --verbose && npm run build"
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "20.13.1"
+  NPM_VERSION = "10.7.0"
   NPM_FLAGS = "--legacy-peer-deps"
   NODE_OPTIONS = "--max_old_space_size=4096"
   NEXT_TELEMETRY_DISABLED = "1"
   PRISMA_SKIP_POSTINSTALL_GENERATE = "true"
+  CI = "false"
+  NETLIFY_USE_PNPM = "false"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
