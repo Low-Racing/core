@@ -2,11 +2,6 @@
   "name": "low-racing-core",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": ">=20.13.1 <21",
-    "npm": ">=10.7.0 <11"
-  },
-  "packageManager": "npm@10.7.0",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "npx prisma generate && next build",

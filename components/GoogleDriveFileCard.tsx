@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { filesize } from "filesize";
 import { Copy, Download, Edit } from "lucide-react";
-import React, { useState } from "react";
+import * as React from "react";
+import { useState } from "react";
 import { toast } from "react-toastify";
 import JsonEditorModal from "./JsonEditorModal";
 
@@ -79,7 +80,7 @@ const DeleteConfirmationModal = ({
   );
 };
 
-const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
+const GoogleDriveFileCard: React.FC<Props> = ({ file }): React.ReactElement => {
   const { 
     id, 
     title, 
@@ -166,6 +167,8 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
     }
   };
 
+
+
   // Renomear arquivo
   const handleRenameTitle = async (e?: React.FocusEvent<HTMLInputElement> | React.KeyboardEvent<HTMLInputElement>) => {
     // Se for um evento de teclado e não for Enter ou Escape, não faz nada
@@ -230,18 +233,26 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
   };
 
   // Apagar arquivo
-  const handleDeleteFile = async () => {
+  const handleDeleteFile = async (): Promise<void> => {
+    if (!id) {
+      toast.error('ID do arquivo não encontrado');
+      return;
+    }
+
     setIsDeleteModalOpen(false);
     
     await withLoading(async () => {
       try {
         setIsDeleting(true);
-        const res = await fetch(`/api/file/delete?fileId=${id}`, { 
-          method: 'DELETE' 
+        const response = await fetch(`/api/file/delete?fileId=${id}`, { 
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
         
-        const data = await res.json();
-        if (!res.ok) {
+        const data = await response.json();
+        if (!response.ok) {
           throw new Error(data.error || 'Erro ao apagar o arquivo');
         }
         
