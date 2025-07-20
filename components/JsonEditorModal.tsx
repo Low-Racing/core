@@ -1,10 +1,9 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@heroui/modal";
-import { Textarea } from "@heroui/input";
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { X } from "lucide-react";
 
 interface JsonEditorModalProps {
   isOpen: boolean;
@@ -22,6 +21,8 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
   const [jsonContent, setJsonContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  console.log('JsonEditorModal props:', { isOpen, fileId, fileName });
 
   useEffect(() => {
     if (isOpen && fileId) {
@@ -107,28 +108,38 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose}
-      size="5xl"
-      scrollBehavior="inside"
-      classNames={{
-        base: "max-h-[90vh]",
-        body: "py-6",
-      }}
-    >
-      <ModalContent>
-        <ModalHeader className="flex flex-col gap-1">
-          <h2 className="text-xl font-semibold">Editando JSON</h2>
-          <p className="text-sm text-gray-500">{fileName}</p>
-        </ModalHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black bg-opacity-50" 
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Editando JSON</h2>
+            <p className="text-sm text-gray-500 mt-1">{fileName}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
         
-        <ModalBody>
+        {/* Body */}
+        <div className="flex-1 p-6 overflow-auto">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-2">Carregando arquivo...</span>
+              <span className="ml-2 text-gray-600">Carregando arquivo...</span>
             </div>
           ) : (
             <div className="space-y-4">
@@ -139,48 +150,45 @@ const JsonEditorModal: React.FC<JsonEditorModalProps> = ({
                 <Button
                   size="sm"
                   variant="flat"
-                  onPress={formatJson}
+                  onClick={formatJson}
                   className="text-xs"
                 >
                   Formatar JSON
                 </Button>
               </div>
               
-              <Textarea
+              <textarea
                 value={jsonContent}
                 onChange={(e) => setJsonContent(e.target.value)}
-                minRows={20}
-                maxRows={30}
-                className="w-full font-mono text-sm"
+                rows={20}
+                className="w-full p-3 border border-gray-300 rounded-md font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Cole o conteúdo JSON aqui..."
-                classNames={{
-                  input: "font-mono text-sm",
-                }}
               />
             </div>
           )}
-        </ModalBody>
+        </div>
         
-        <ModalFooter>
+        {/* Footer */}
+        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
           <Button 
             color="danger" 
             variant="light" 
-            onPress={onClose}
-            isDisabled={isSaving}
+            onClick={onClose}
+            disabled={isSaving}
           >
             Cancelar
           </Button>
           <Button 
             color="primary" 
-            onPress={handleSave}
-            isLoading={isSaving}
-            isDisabled={isLoading || isSaving}
+            onClick={handleSave}
+            disabled={isLoading || isSaving}
+            className={isSaving ? 'opacity-50 cursor-not-allowed' : ''}
           >
             {isSaving ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+        </div>
+      </div>
+    </div>
   );
 };
 
