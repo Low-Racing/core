@@ -123,26 +123,23 @@ const GoogleDriveFileCard: React.FC<Props> = ({ file }) => {
       <CardFooter className="flex gap-2">
         {isJsonFile && (
           <Button
-            variant="bordered"
-            color="secondary"
-            className="flex-1 border-purple-500 text-purple-600 hover:bg-purple-50"
+            variant="solid"
+            className="flex-1 bg-purple-600 text-white hover:bg-purple-700"
             onClick={handleEditJson}
           >
             <Edit className="w-4 h-4 mr-1" /> Editar JSON
           </Button>
         )}
         <Button
-          variant="bordered"
-          color="primary"
-          className={`${isJsonFile ? "flex-1" : "flex-1"} border-blue-500 text-blue-600 hover:bg-blue-50`}
+          variant="solid"
+          className={`${isJsonFile ? "flex-1" : "flex-1"} bg-blue-600 text-white hover:bg-blue-700`}
           onClick={handleCopy}
         >
           <Copy className="w-4 h-4 mr-1" /> Copiar URL
         </Button>
         <Button
-          variant="bordered"
-          color="success"
-          className={`${isJsonFile ? "flex-1" : "flex-1"} border-green-500 text-green-600 hover:bg-green-50`}
+          variant="solid"
+          className={`${isJsonFile ? "flex-1" : "flex-1"} bg-green-600 text-white hover:bg-green-700`}
           onClick={handleDownload}
         >
           <Download className="w-4 h-4 mr-1" /> Baixar
