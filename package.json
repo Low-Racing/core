@@ -46,6 +46,7 @@
     "@types/node": "^20.17.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "10.4.21",
     "daisyui": "^4.12.23",
     "postcss": "^8.4.35",
     "prisma": "^6.11.1",
