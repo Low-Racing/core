@@ -2,20 +2,28 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Enable server components
+  
+  // Configurações experimentais
   experimental: {
     serverActions: true,
-    // Add any other experimental features you need
+    optimizeCss: true,
   },
-  // Increase the maximum file size for API routes (if needed)
+
+  // Configuração de tamanho máximo para rotas de API
   api: {
     bodyParser: {
       sizeLimit: '10mb',
     },
   },
-  // Add any necessary webpack configurations
+
+  // Configuração do Webpack
   webpack: (config, { isServer }) => {
-    // Important: return the modified config
+    // Adiciona suporte para arquivos de mídia
+    config.module.rules.push({
+      test: /\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
+      type: 'asset/resource',
+    });
+
     return config;
   },
   // Add environment variables that should be exposed to the browser
