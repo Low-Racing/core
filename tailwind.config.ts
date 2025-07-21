@@ -1,7 +1,7 @@
-import {heroui} from '@heroui/theme';
+import { heroui } from '@heroui/theme';
 import type { Config } from "tailwindcss";
 
-export default {
+const config: Config = {
     darkMode: ["class"],
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -64,8 +64,15 @@ export default {
   		}
   	}
   },
-  plugins: [require("daisyui"),require("tailwindcss-animate"),heroui()],
+  plugins: [
+    require("@tailwindcss/typography"),
+    require("daisyui"),
+    require("tailwindcss-animate"),
+    heroui()
+  ],
   daisyui: {
-    theme: ["dark", "light"],
+    themes: ["dark", "light"],
   },
 } satisfies Config;
+
+export default config;
