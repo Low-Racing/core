@@ -49,10 +49,40 @@
     "@types/react-dom": "^19",
     "autoprefixer": "10.4.21",
     "daisyui": "^4.12.23",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.1.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
     "postcss": "^8.4.35",
+    "prettier": "^3.0.0",
     "prisma": "^6.11.1",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.20.3",
     "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.18.0",
+    "npm": ">=9.0.0"
+  },
+  "packageManager": "npm@10.5.0",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,md,mdx,css,scss}": [
+      "prettier --write"
+    ]
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
