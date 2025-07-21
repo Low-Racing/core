@@ -1,4 +1,3 @@
-import { heroui } from '@heroui/theme';
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -6,8 +5,7 @@ const config: Config = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/@heroui/theme/dist/components/(card|ripple).js"
+    "./app/**/*.{js,ts,jsx,tsx,mdx}"
   ],
   theme: {
   	extend: {
@@ -67,8 +65,7 @@ const config: Config = {
   plugins: [
     require("@tailwindcss/typography"),
     require("daisyui"),
-    require("tailwindcss-animate"),
-    heroui()
+    require("tailwindcss-animate")
   ],
   daisyui: {
     themes: ["dark", "light"],
